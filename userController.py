@@ -26,17 +26,12 @@ def add_new_user(data):
 
 def user_log_in(data):
     print("data log in: ", data)
+
     query = "select id, username, password from user where username = %s"
     values = (data['username'],)
     cursor = db.connection.cursor()
-    print("befor ex: ")
-
     cursor.execute(query, values)
-    print("after ex: ")
-
     user = cursor.fetchone()
-
-
 
     if not user:
         abort(401)
@@ -46,12 +41,14 @@ def user_log_in(data):
 
     if not bcrypt.checkpw((data['password']).encode('utf-8'), hashed_pwd.encode('utf-8')):
         abort(401)
-
-    query = "insert into session (user_id, session_id) values(%s, %s)"
+    print(user_id)
     session_id = str(uuid.uuid4())
+    query = "insert into session (user_id, session_id) values(%s, %s)"
     values = (user_id, session_id)
     cursor.execute(query, values)
+    db.connection.commit()
     cursor.close()
+
     resp = make_response()
     resp.set_cookie("session_id", session_id)
     return resp
