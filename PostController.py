@@ -40,3 +40,4 @@ def add_new_post(data):
     }
     cursor.close()
     return jsonify(response), 201
+
