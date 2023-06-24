@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, abort, make_response
+from flask import Flask, session, jsonify, request, abort, make_response, redirect
 from settings import dbpwd
 from database import db
 import mysql.connector as mysql
@@ -8,7 +8,6 @@ import bcrypt
 
 
 def add_new_user(data):
-    print("data sign up: ", data)
     query = "INSERT INTO user (username, password) values (%s, %s)"
     values = (data['username'], bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()))
     cursor = db.connection.cursor()
@@ -21,11 +20,12 @@ def add_new_user(data):
         'user_id': cursor.lastrowid
     }
     cursor.close()
+    #####
     return jsonify(response), 201
 
 
 def user_log_in(data):
-    print("data log in: ", data)
+    print("cookie on sign in: ", request.cookies.get('session_id'))
 
     query = "select id, username, password from user where username = %s"
     values = (data['username'],)
@@ -49,6 +49,41 @@ def user_log_in(data):
     db.connection.commit()
     cursor.close()
 
-    resp = make_response()
-    resp.set_cookie("session_id", session_id)
+    # print("cookie on sign in: ", request.cookies.get('session_id'))
+
+    resp = make_response("logged in successfully")
+    resp.set_cookie("session_id", session_id, path="/", samesite='None', secure=True)
     return resp
+
+
+def session_validator():
+    cookie_value = request.cookies.get('session_id')
+    print("cookie: ", cookie_value)
+    if cookie_value:
+        query = "select user_id, log_in_or_out from session where session_id = %s"
+        values = (cookie_value,)
+        cursor = db.connection.cursor()
+        cursor.execute(query, values)
+        user = cursor.fetchone()
+        if not user:
+            abort(401)
+        user_id = user[0]
+
+        if user_id:
+            return user_id
+        else:
+            abort(401)
+
+
+def clear_session(user_id):
+    print("my user: ", user_id)
+
+    if user_id:
+        query = "DELETE FROM session WHERE user_id = %s"
+        values = (user_id,)
+        cursor = db.connection.cursor()
+        cursor.execute(query, values)
+        db.connection.commit()
+        cursor.close()
+
+    return make_response(" you log out ")

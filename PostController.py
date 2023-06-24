@@ -25,10 +25,10 @@ def get_all_posts():
     return json.dumps(data)
 
 
-def add_new_post(data):
+def add_new_post(data, user_id):
     print("data: ", data)
     query = "INSERT INTO post (title, body, user_id) values (%s, %s, %s)"
-    values = (data['title'], data['body'], data['user_id'])
+    values = (data['title'], data['body'], user_id)
     cursor = db.connection.cursor()
     cursor.execute(query, values)
     db.connection.commit()

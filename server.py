@@ -1,21 +1,23 @@
-from flask import Flask, request
+from flask import Flask, request, abort
 from database import db
 from PostController import get_all_posts, add_new_post
-from userController import add_new_user, user_log_in
+from userController import add_new_user, user_log_in, session_validator, clear_session
 from flask_cors import CORS
 import uuid
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app, supports_credentials=True, origins=["http://localhost:3000", "http://127.0.0.1:5000"],
+     expose_headers='Set-Cookie')
 db.connect()
 
 
-@app.route('/post', methods=['GET', 'POST'])
+@app.route('/posts', methods=['GET', 'POST'])
 def manage_posts():
     if request.method == 'GET':
         return get_all_posts()
     else:
-        return add_new_post(request.get_json())
+        user_id = session_validator()
+        return add_new_post(request.get_json(), user_id)
 
 
 @app.route('/signup', methods=['POST'])
@@ -26,6 +28,12 @@ def manage_sign_up():
 @app.route('/login', methods=['POST'])
 def manage_log_in():
     return user_log_in(request.get_json())
+
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    user_id = session_validator()
+    return clear_session(user_id)
 
 
 if __name__ == "__main__":
