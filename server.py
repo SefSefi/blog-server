@@ -17,8 +17,8 @@ def manage_posts():
         return get_all_posts()
     else:
         user_id = session_validator()
+        print("chacking", request.get_json())
         return add_new_post(request.get_json(), user_id)
-
 
 @app.route('/signup', methods=['POST'])
 def manage_sign_up():

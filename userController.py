@@ -20,7 +20,6 @@ def add_new_user(data):
         'user_id': cursor.lastrowid
     }
     cursor.close()
-    #####
     return jsonify(response), 201
 
 
@@ -49,9 +48,8 @@ def user_log_in(data):
     db.connection.commit()
     cursor.close()
 
-    # print("cookie on sign in: ", request.cookies.get('session_id'))
-
     resp = make_response("logged in successfully")
+    resp.user_id = user_id
     resp.set_cookie("session_id", session_id, path="/", samesite='None', secure=True)
     return resp
 

@@ -9,10 +9,11 @@ def get_all_posts():
         FROM post as p
         JOIN user as u
         ON p.user_id=u.id
+        LIMIT 100
     '''
 
     cursor = db.connection.cursor()
-    cursor.execute(query)
+    cursor.execute(query,)
     records = cursor.fetchall()
     cursor.close()
     header = ['username', 'id', 'title', 'body', 'created_at']
@@ -26,6 +27,7 @@ def get_all_posts():
 
 
 def add_new_post(data, user_id):
+    print("add new post")
     print("data: ", data)
     query = "INSERT INTO post (title, body, user_id) values (%s, %s, %s)"
     values = (data['title'], data['body'], user_id)
