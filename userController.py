@@ -58,7 +58,7 @@ def session_validator():
     cookie_value = request.cookies.get('session_id')
     print("cookie: ", cookie_value)
     if cookie_value:
-        query = "select user_id, log_in_or_out from session where session_id = %s"
+        query = "select user_id from session where session_id = %s"
         values = (cookie_value,)
         cursor = db.connection.cursor()
         cursor.execute(query, values)
