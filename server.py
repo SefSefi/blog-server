@@ -1,6 +1,6 @@
 from flask import Flask, request, abort
 from database import db
-from PostController import get_all_posts, add_new_post
+from PostController import get_all_posts, add_new_post, get_categories
 from userController import add_new_user, user_log_in, session_validator, clear_session
 from flask_cors import CORS
 import uuid
@@ -34,6 +34,10 @@ def manage_log_in():
 def logout():
     user_id = session_validator()
     return clear_session(user_id)
+
+@app.route('/category', methods=['get'])
+def category():
+    return get_categories()
 
 
 if __name__ == "__main__":

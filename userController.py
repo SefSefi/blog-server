@@ -7,6 +7,17 @@ import json
 import bcrypt
 
 
+def signup_with_google(data):
+    query = "INSERT INTO user (username, password) values (%s, %s)"
+    values = (data['username'], 'googleUser')
+    cursor = db.connection.cursor()
+    cursor.execute(query, values)
+    user_id = cursor.lastrowid
+    db.connection.commit()
+    cursor.close()
+    return user_id
+
+
 def add_new_user(data):
     query = "INSERT INTO user (username, password) values (%s, %s)"
     values = (data['username'], bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()))
@@ -24,23 +35,28 @@ def add_new_user(data):
 
 
 def user_log_in(data):
-    print("cookie on sign in: ", request.cookies.get('session_id'))
+    print("login data: ", data)
+    googleflag = data['isGoogleLogin']
 
     query = "select id, username, password from user where username = %s"
     values = (data['username'],)
     cursor = db.connection.cursor()
     cursor.execute(query, values)
     user = cursor.fetchone()
+    user_id = None
 
-    if not user:
-        abort(401)
+    if user:
+        user_id = user[0]
+        if not googleflag:
+            hashed_pwd = user[2]
+            if not bcrypt.checkpw((data['password']).encode('utf-8'), hashed_pwd.encode('utf-8')):
+                abort(401)
+    else:
+        if googleflag:
+            user_id = signup_with_google(data)
+        else:
+            abort(401)
 
-    user_id = user[0]
-    hashed_pwd = user[2]
-
-    if not bcrypt.checkpw((data['password']).encode('utf-8'), hashed_pwd.encode('utf-8')):
-        abort(401)
-    print(user_id)
     session_id = str(uuid.uuid4())
     query = "insert into session (user_id, session_id) values(%s, %s)"
     values = (user_id, session_id)

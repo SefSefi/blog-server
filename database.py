@@ -30,4 +30,3 @@ class Database:
 
 
 db = Database(host="localhost", user="root", password=dbpwd, database="blog")
-# host="myblogdb.cbrdyb6rueag.eu-central-1.rds.amazonaws.com"
