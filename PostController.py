@@ -1,5 +1,5 @@
 import json
-from flask import jsonify
+from flask import jsonify, abort, make_response
 from database import db
 
 
@@ -26,8 +26,8 @@ def get_all_posts():
 
 
 def add_new_post(data, user_id):
-    print("add new post")
-    print("data: ", data)
+    # print("add new post")
+    # print("data: ", data)
     query = "INSERT INTO post (title, body, user_id, category_id) values (%s, %s, %s, %s)"
     values = (data['title'], data['body'], user_id, data['category'])
     cursor = db.connection.cursor()
@@ -41,6 +41,50 @@ def add_new_post(data, user_id):
     }
     cursor.close()
     return jsonify(response), 201
+
+
+def override_post(data, user_id):
+    print("override post")
+    print("data: ", data)
+    query = "UPDATE post SET title=%s, body=%s, category_id=%s WHERE id=%s AND user_id=%s"
+    values = (data['title'], data['body'], data['category'], data['post_id'], user_id)
+    cursor = db.connection.cursor()
+    cursor.execute(query, values)
+    db.connection.commit()
+    cursor.close()
+
+    if cursor.rowcount == 0:
+        abort(401)
+
+    else:
+        response = {
+            'status': 'success',
+            'message': 'Post created successfully',
+            'post_id': cursor.lastrowid
+        }
+        return jsonify(response), 201
+
+
+def delete_the_post(data, user_id):
+    print("delete post")
+    print("data: ", data)
+    query = "DELETE FROM post WHERE id=%s AND user_id=%s"
+    values = (data['post_id'], user_id)
+    cursor = db.connection.cursor()
+    cursor.execute(query, values)
+    db.connection.commit()
+    cursor.close()
+
+    if cursor.rowcount == 0:
+        abort(401)
+
+    else:
+        response = {
+            'status': 'success',
+            'message': 'you deleted the post',
+            # 'post_id': cursor.lastrowid
+        }
+        return jsonify(response), 201
 
 
 def get_categories():
