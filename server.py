@@ -1,6 +1,6 @@
 from flask import Flask, request, abort
 from database import db
-from PostController import get_all_posts, add_new_post, override_post, get_categories, delete_the_post
+from PostController import get_all_posts, add_new_post, override_post, get_categories, delete_the_post, write_comment
 from userController import add_new_user, user_log_in, session_validator, clear_session
 from flask_cors import CORS
 import uuid
@@ -31,6 +31,12 @@ def manage_updated_post():
 def manage_delete_post():
     user_id = session_validator()
     return delete_the_post(request.get_json(), user_id)
+
+
+@app.route('/commentPost', methods=['POST'])
+def manage_comment():
+    user_id = session_validator()
+    return write_comment(request.get_json(), user_id)
 
 
 @app.route('/signup', methods=['POST'])

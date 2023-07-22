@@ -14,20 +14,18 @@ def get_all_posts():
 
     cursor = db.connection.cursor()
     cursor.execute(query, )
-    records = cursor.fetchall()
+    posts = cursor.fetchall()
     cursor.close()
-    header = ['username', 'id', 'title', 'body', 'category_id', 'created_at']
+    header = ['username', 'id', 'title', 'body', 'category_id', 'created_at', 'comments']
     data = []
-    for r in records:
-        valid_r = (r[0], r[1], r[2], r[3], r[4], r[5].strftime('%Y-%m-%d %H:%M:%S'))
+    for r in posts:
+        valid_r = (r[0], r[1], r[2], r[3], r[4], r[5].strftime('%Y-%m-%d %H:%M:%S'), get_post_comments(r[1]))
         data.append(dict(zip(header, valid_r)))
 
     return json.dumps(data)
 
 
 def add_new_post(data, user_id):
-    # print("add new post")
-    # print("data: ", data)
     query = "INSERT INTO post (title, body, user_id, category_id) values (%s, %s, %s, %s)"
     values = (data['title'], data['body'], user_id, data['category'])
     cursor = db.connection.cursor()
@@ -101,3 +99,44 @@ def get_categories():
         data.append(dict(zip(header, r)))
 
     return json.dumps(data)
+
+
+def get_post_comments(post_id):
+    query = '''
+        SELECT c.id, c.content, u.username
+        FROM comment as c
+        JOIN user as u
+        ON c.user_id = u.id
+        WHERE c.post_id = %s;
+    '''
+    values = (post_id,)
+    cursor = db.connection.cursor()
+    cursor.execute(query, values)
+    data = cursor.fetchall()
+    cursor.close()
+
+    header = ['id', 'content', 'author']
+    comments = []
+    for c in data:
+        comments.append(dict(zip(header, c)))
+    print("comments: ", comments)
+    return comments
+
+
+def write_comment(data, user_id):
+    print("data: ", data)
+    query = "INSERT INTO comment (content, post_id, user_id) values (%s, %s, %s)"
+    values = (data['content'], data['post_id'], user_id)
+    cursor = db.connection.cursor()
+    cursor.execute(query, values)
+    db.connection.commit()
+    cursor.close()
+
+    comments = get_post_comments(data['post_id'])
+
+    response = {
+        'status': 'success',
+        'message': 'Post created successfully',
+        'comments': comments,
+    }
+    return jsonify(response), 201
